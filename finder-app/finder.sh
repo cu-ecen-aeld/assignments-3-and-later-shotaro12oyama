@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #Assignment1
 ##Accepts the following runtime arguments: 
 ##the first argument is a path to a directory on the filesystem, referred to below as filesdir; 

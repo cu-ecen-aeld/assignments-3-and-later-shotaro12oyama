@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #Assingment1:
 ##Accepts the following arguments: 
 ##the first argument is a full path to a file (including filename) on the filesystem, referred to below as writefile; 
