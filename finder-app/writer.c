@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <syslog.h>
 
+#define EXIT_FAILURE 1
+#define EXIT_SUCCESS 0
+
 void write_to_file(const char* file_path, const char* text) {
     FILE* file = fopen(file_path, "w");
     if (file == NULL) {
