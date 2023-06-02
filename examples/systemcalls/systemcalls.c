@@ -1,4 +1,11 @@
 #include "systemcalls.h"
+#include "stdlib.h"
+#include "unistd.h"
+#include "sys/types.h"
+#include "sys/wait.h"
+#include "stdbool.h"
+#include "fcntl.h"
+
 
 /**
  * @param cmd the command to execute with system()
@@ -17,7 +24,9 @@ bool do_system(const char *cmd)
  *   or false() if it returned a failure
 */
 
-    return true;
+    int result = system(cmd);
+
+    return (result ==0);
 }
 
 /**
@@ -47,8 +56,8 @@ bool do_exec(int count, ...)
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
-
+    // command[count] = command[count];
+    
 /*
  * TODO:
  *   Execute a system command by calling fork, execv(),
@@ -58,8 +67,39 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
-
     va_end(args);
+
+    if (command[0][0] != '/') {
+        // Command does not include an absolute path
+        fprintf(stderr, "Absolute path required\n");
+        return false;
+    }
+
+    pid_t pid = fork();
+    
+    if (pid < 0) {
+        fprintf(stderr, "Fork failed\n");
+        return false;
+    } else if (pid == 0) {
+        // Child process
+        execv(command[0], command);
+	fprintf(stderr, "Execv failed\n");
+	return false;
+	
+    } else {
+        // Parent process
+        int status;
+            waitpid(pid, &status, 0);
+        
+        if (WIFEXITED(status)) {
+            int exitStatus = WEXITSTATUS(status);
+            return exitStatus == 0;    
+    
+	} else {
+            fprintf(stderr, "Child process terminated abnormally\n");
+            return false;
+        }
+    }
 
     return true;
 }
@@ -82,7 +122,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
+    // command[count] = command[count];
 
 
 /*
@@ -94,6 +134,55 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
 */
 
     va_end(args);
+
+    if (command[0][0] != '/') {
+        // Command does not include an absolute path
+        fprintf(stderr, "Absolute path required\n");
+        return false;
+    }
+
+    pid_t pid = fork();
+    if (pid < 0) {
+        fprintf(stderr, "Fork failed\n");
+        return false;
+    } else if (pid == 0) {
+        // Child process
+
+        // Open the output file
+        int fd = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd < 0) {
+            fprintf(stderr, "Failed to open output file\n");
+            return false;
+        }
+
+        // Redirect stdout to the output file
+        if (dup2(fd, STDOUT_FILENO) < 0) {
+            fprintf(stderr, "Failed to redirect stdout\n");
+            return false;
+        }
+
+        // Close the file descriptor
+        close(fd);
+
+        // Execute the command
+        execv(command[0], command);
+
+        fprintf(stderr, "Execv failed\n");
+        return false;
+
+    } else {
+        // Parent process
+        int status;
+        waitpid(pid, &status, 0);
+
+        if (WIFEXITED(status)) {
+            int exitStatus = WEXITSTATUS(status);
+	    return exitStatus == 0;
+        } else {
+            fprintf(stderr, "Child process terminated abnormally\n");
+            return false;
+        }
+    }
 
     return true;
 }
