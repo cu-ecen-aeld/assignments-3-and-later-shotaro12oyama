@@ -110,7 +110,6 @@ make writer
 cp writer ${OUTDIR}/rootfs/home/
 
 
-
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
 cp writer ${OUTDIR}/rootfs/home/
