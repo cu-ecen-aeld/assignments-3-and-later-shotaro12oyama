@@ -1,13 +1,27 @@
-SOURCES=main.c
-CROSS_COMPILE=""
-BINARY_FILE="aesdsocket"
+INCLUDE_DIRS =
+LIB_DIRS =
+CC = gcc
 
-default: $(SOURCES)
-	${CROSS_COMPILE}gcc -c $(SOURCES)
-	${CROSS_COMPILE}gcc -o ${BINARY_FILE} $(SOURCES:%.c=%.o)
-debug: 
-	${CROSS_COMPILE}gcc -ggdb3 -c $(SOURCES)
-	${CROSS_COMPILE}gcc -ggdb3 -o ${BINARY_FILE} $(SOURCES:%.c=%.o)
-all: default
+CDEFS =
+CFLAGS = -O0 -Wall -Werror -g $(INCLUDE_DIRS) $(CDEFS)
+LIBS =
+
+HFILES =
+CFILES = aesdsocket.c
+
+SRCS = ${HFILES} ${CFILES}
+OBJS = ${CFILES:.c=.o}
+
+all: aesdsocket
+default: aesdsocket
+
 clean:
-	rm $(SOURCES:%.c=%.o)  ${BINARY_FILE} | true
+	-rm -f *.o *.d
+	-rm -f aesdsocket
+
+aesdsocket: aesdsocket.o
+	$(CROSS_COMPILE)$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $@.o
+
+.c.o:
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -c $<
+
