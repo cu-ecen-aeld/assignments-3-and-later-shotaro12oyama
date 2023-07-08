@@ -4,6 +4,7 @@ CC = gcc
 
 CDEFS =
 CFLAGS = -O0 -Wall -Werror -g $(INCLUDE_DIRS) $(CDEFS)
+LDFLAGS?= -lpthread -lrt
 LIBS =
 
 HFILES =
