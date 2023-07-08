@@ -232,8 +232,8 @@ int handle_client_connection(int clientfd) {
 void daemonize()
 {
     // Fork the parent process
-    pid_t pid = fork();
-   
+   pid_t pid = fork();
+
     if (pid < 0)
     {
         // Forking failed
@@ -261,6 +261,39 @@ void daemonize()
     close(null_fd);
 }
 
+void signal_handler(int sig)
+{
+    if (sig == SIGINT || sig == SIGTERM)
+    {
+        graceful_stop = 1;
+        close(server_socket);
+    }
+}
+
+void* timer_thread_handler(void* arg) {
+    while (!graceful_stop) {
+        time_t current_time = time(NULL);
+        struct tm* timeinfo = localtime(&current_time);
+        char timestamp[100];
+        strftime(timestamp, sizeof(timestamp), "timestamp:%a, %d %b %Y %H:%M:%S %z", timeinfo);
+
+        pthread_mutex_lock(&mutex);
+        FILE* file = fopen(VARTMPFILE, "a");
+        if (file == NULL) {
+            perror("Failed to open file");
+            pthread_mutex_unlock(&mutex);
+            break;
+        }
+        fwrite(timestamp, strlen(timestamp), 1, file);
+        fclose(file);
+        pthread_mutex_unlock(&mutex);
+
+        sleep(10);
+    }
+
+    pthread_exit(NULL);
+}
+
 int run(bool daemon) {
     int status = 0;
     openlog("aesdsocket", LOG_PID, LOG_USER);
@@ -283,6 +316,11 @@ int run(bool daemon) {
         openlog("aesdsocket", LOG_PID | LOG_CONS, LOG_USER);
         syslog(LOG_DEBUG, "aesdsocket started");
     }
+    
+    pthread_t timer_thread;
+    pthread_mutex_init(&mutex, NULL);
+    pthread_create(&timer_thread, NULL, timer_thread_handler, NULL);
+
     while (1)
     {
         int clientfd = accept_connection(server_socket);
@@ -305,6 +343,8 @@ int run(bool daemon) {
         }
     }
 
+    pthread_join(timer_thread, NULL);
+    pthread_mutex_destroy(&mutex);
     closelog();
     // Close the socket
     if (close(server_socket) == -1 && !graceful_stop)
@@ -314,16 +354,6 @@ int run(bool daemon) {
     }
     remove(VARTMPFILE);
     return 0;
-}
-
-// Signal handler function
-void signal_handler(int sig)
-{
-    if (sig == SIGINT || sig == SIGTERM)
-    {
-        graceful_stop = 1;
-        close(server_socket);
-    }
 }
 
 int main(int argc, char *argv[])
