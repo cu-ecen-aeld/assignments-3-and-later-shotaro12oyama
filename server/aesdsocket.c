@@ -14,6 +14,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pthread.h>
+#include <time.h>
+
 #define THEPORT "9000"
 #define BUF_SIZE 1024
 #define VARTMPFILE "/var/tmp/aesdsocketdata"
@@ -21,6 +24,7 @@
 
 int server_socket;
 int graceful_stop = 0;
+pthread_mutex_t mutex;
 
 int sock_to_peer(int sockfd, char *buf, size_t buf_size)
 {
@@ -196,11 +200,15 @@ int handle_client_connection(int clientfd) {
                 if (bytesRead == 0) {
                     break;
                 }
+                pthread_mutex_lock(&mutex);
                 fwrite(buf, 1, bytesRead, file);
                 fclose(file);
+                pthread_mutex_unlock(&mutex);
 
                 if (buf[bytesRead-1] == '\n') {
+                    pthread_mutex_lock(&mutex);
                     status = send_file_content(VARTMPFILE, clientfd);
+                    pthread_mutex_unlock(&mutex);
                     if (status == -1)
                     {
                         fprintf(stderr, "handle_client_connection(): sending file to client %s\n", VARTMPFILE);
@@ -225,7 +233,7 @@ void daemonize()
 {
     // Fork the parent process
     pid_t pid = fork();
-
+   
     if (pid < 0)
     {
         // Forking failed
