@@ -24,7 +24,7 @@
 
 int server_socket;
 int graceful_stop = 0;
-pthread_mutex_t mutex;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int sock_to_peer(int sockfd, char *buf, size_t buf_size)
 {
@@ -118,15 +118,18 @@ int send_file_content(char *filename, int sockfd)
     FILE *readfile = fopen(filename, "rb");
     while ((bytesRead = fread(buf, 1, sizeof(buf), readfile)) > 0)
     {
+	pthread_mutex_lock(&mutex);
         bytesSent = send(sockfd, buf, bytesRead, 0);
         if (bytesSent == -1)
         {
             perror("send failed");
             fclose(readfile);
+	    pthread_mutex_unlock(&mutex);
             return -1;
         }
     }
     fclose(readfile);
+    pthread_mutex_unlock(&mutex);
     return 0;
 }
 
@@ -200,15 +203,11 @@ int handle_client_connection(int clientfd) {
                 if (bytesRead == 0) {
                     break;
                 }
-                pthread_mutex_lock(&mutex);
                 fwrite(buf, 1, bytesRead, file);
                 fclose(file);
-                pthread_mutex_unlock(&mutex);
 
                 if (buf[bytesRead-1] == '\n') {
-                    pthread_mutex_lock(&mutex);
                     status = send_file_content(VARTMPFILE, clientfd);
-                    pthread_mutex_unlock(&mutex);
                     if (status == -1)
                     {
                         fprintf(stderr, "handle_client_connection(): sending file to client %s\n", VARTMPFILE);
@@ -275,7 +274,7 @@ void* timer_thread_handler(void* arg) {
         time_t current_time = time(NULL);
         struct tm* timeinfo = localtime(&current_time);
         char timestamp[100];
-        strftime(timestamp, sizeof(timestamp), "timestamp:%a, %d %b %Y %H:%M:%S %z", timeinfo);
+        strftime(timestamp, sizeof(timestamp), "timestamp:%a, %d %b %Y %H:%M:%S %z\n", timeinfo);
 
         pthread_mutex_lock(&mutex);
         FILE* file = fopen(VARTMPFILE, "a");
