@@ -25,6 +25,7 @@
 int server_socket;
 int graceful_stop = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_t timer_thread;
 
 int sock_to_peer(int sockfd, char *buf, size_t buf_size)
 {
@@ -293,6 +294,18 @@ void* timer_thread_handler(void* arg) {
     pthread_exit(NULL);
 }
 
+void cleanup_threads()
+{
+    pthread_cancel(timer_thread);
+    pthread_join(timer_thread, NULL);
+}
+
+void cleanup()
+{
+    cleanup_threads();
+    pthread_mutex_destroy(&mutex);
+}
+
 int run(bool daemon) {
     int status = 0;
     openlog("aesdsocket", LOG_PID, LOG_USER);
@@ -316,7 +329,6 @@ int run(bool daemon) {
         syslog(LOG_DEBUG, "aesdsocket started");
     }
     
-    pthread_t timer_thread;
     pthread_mutex_init(&mutex, NULL);
     pthread_create(&timer_thread, NULL, timer_thread_handler, NULL);
 
@@ -329,7 +341,8 @@ int run(bool daemon) {
         if (clientfd == -1)
         {
             fprintf(stderr, "accept_connection() failed\n");
-            return -1;
+            cleanup();
+	    return -1;
         }
 
         if (!graceful_stop)
@@ -338,12 +351,12 @@ int run(bool daemon) {
         if (status != 0)
         {
             fprintf(stderr, "handle_client_connection, status = %d\n", status);
-            return -1;
+            cleanup();
+	    return -1;
         }
     }
 
-    pthread_join(timer_thread, NULL);
-    pthread_mutex_destroy(&mutex);
+    cleanup();
     closelog();
     // Close the socket
     if (close(server_socket) == -1 && !graceful_stop)
