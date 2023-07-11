@@ -204,7 +204,8 @@ int handle_client_connection(int clientfd) {
                 if (bytesRead == 0) {
                     break;
                 }
-                fwrite(buf, 1, bytesRead, file);
+                buf[bytesRead] = '\0'; 
+		fwrite(buf, 1, bytesRead, file);
                 fclose(file);
 
                 if (buf[bytesRead-1] == '\n') {
@@ -285,9 +286,7 @@ void* timer_thread_handler(void* arg) {
             pthread_mutex_unlock(&mutex);
             break;
         }
-        //fwrite(timestamp, strlen(timestamp), 1, file);
-        fseek(file, 0, SEEK_END);
-	fputs(timestamp, file);
+        fwrite(timestamp, strlen(timestamp), 1, file);
 	fclose(file);
         pthread_mutex_unlock(&mutex);
 
