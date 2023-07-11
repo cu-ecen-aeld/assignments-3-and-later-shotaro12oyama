@@ -1,15 +1,9 @@
 CC ?= $(CROSS_COMPILE)gcc
 
-CDEFS =
 CFLAGS ?= -O0 -Wall -Werror -g $(INCLUDE_DIRS) $(CDEFS)
 LDFLAGS ?= -lpthread -lrt
-LIBS =
 
-HFILES =
-CFILES = aesdsocket.c
-
-SRCS = ${HFILES} ${CFILES}
-OBJS = ${CFILES:.c=.o}
+SRC := aesdsocket.c
 
 all: aesdsocket
 default: aesdsocket
