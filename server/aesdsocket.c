@@ -285,8 +285,10 @@ void* timer_thread_handler(void* arg) {
             pthread_mutex_unlock(&mutex);
             break;
         }
-        fwrite(timestamp, strlen(timestamp), 1, file);
-        fclose(file);
+        //fwrite(timestamp, strlen(timestamp), 1, file);
+        fseek(file, 0, SEEK_END);
+	fputs(timestamp, file);
+	fclose(file);
         pthread_mutex_unlock(&mutex);
 
         sleep(10);
