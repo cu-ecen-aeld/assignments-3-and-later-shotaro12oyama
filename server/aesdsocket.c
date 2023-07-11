@@ -267,6 +267,7 @@ void signal_handler(int sig)
     {
         graceful_stop = 1;
         close(server_socket);
+	pthread_cancel(timer_thread);
     }
 }
 
