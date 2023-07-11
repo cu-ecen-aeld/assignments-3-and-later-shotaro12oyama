@@ -1,13 +1,12 @@
 CC ?= $(CROSS_COMPILE)gcc
-
+TARGET ?= aesdsocket
 CFLAGS ?= -O0 -Wall -Werror -g $(INCLUDE_DIRS) $(CDEFS)
-LDFLAGS ?= -lpthread -lrt
+LDFLAGS ?= -lpthread
 
 SRC := aesdsocket.c
 
 all: aesdsocket
 default: aesdsocket
-TARGET: ?= aesdsocket
 
 clean:
 	-rm -f *.o *.d
