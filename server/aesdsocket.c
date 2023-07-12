@@ -27,6 +27,7 @@ int graceful_stop = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t timer_thread;
 
+
 int sock_to_peer(int sockfd, char *buf, size_t buf_size)
 {
     // Get the peer address information
@@ -202,9 +203,11 @@ int handle_client_connection(int clientfd) {
                 }
                 // client ended the connection
                 if (bytesRead == 0) {
+		    fclose(file);
                     break;
                 }
-                buf[bytesRead] = '\0'; 
+
+
 		fwrite(buf, 1, bytesRead, file);
                 fclose(file);
 
@@ -275,10 +278,8 @@ void signal_handler(int sig)
 void* timer_thread_handler(void* arg) {
     while (!graceful_stop) {
         time_t current_time = time(NULL);
-        struct tm* timeinfo = localtime(&current_time);
         char timestamp[100];
-        strftime(timestamp, sizeof(timestamp), "timestamp:%a, %d %b %Y %H:%M:%S %z\n", timeinfo);
-
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&current_time));
         pthread_mutex_lock(&mutex);
         FILE* file = fopen(VARTMPFILE, "a");
         if (file == NULL) {
@@ -286,7 +287,7 @@ void* timer_thread_handler(void* arg) {
             pthread_mutex_unlock(&mutex);
             break;
         }
-        fwrite(timestamp, strlen(timestamp), 1, file);
+	fprintf(file, "timestamp:%s\n", timestamp);
 	fclose(file);
         pthread_mutex_unlock(&mutex);
 
