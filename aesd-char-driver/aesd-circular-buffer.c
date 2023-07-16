@@ -12,6 +12,7 @@
 #include <linux/string.h>
 #else
 #include <string.h>
+#include <stdio.h>
 #endif
 
 #include "aesd-circular-buffer.h"
@@ -32,33 +33,22 @@ struct aesd_buffer_entry *aesd_circular_buffer_find_entry_offset_for_fpos(struct
     /**
     * TODO: implement per description
     */
-    
-    // Calculate the total number of characters in the circular buffer
-    size_t total_chars = 0;
-    for (int i = 0; i < AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED; i++) {
-        total_chars += buffer->entry[i].size;
-    }
 
-    // If the char_offset is beyond the total number of characters, return NULL
-    if (char_offset >= total_chars) {
+    if(buffer->entry[buffer->out_offs].buffptr == NULL){
         return NULL;
     }
 
-    // Iterate through the circular buffer entries to find the corresponding entry for char_offset
-    size_t current_offset = 0;
-    for (int i = buffer->out_offs; i != buffer->in_offs; i = (i + 1) % AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED) {
-        size_t entry_chars = buffer->entry[i].size;
-
-        // If char_offset is within the current entry, calculate the byte offset and return the entry
-        if (char_offset < current_offset + entry_chars) {
-            *entry_offset_byte_rtn = char_offset - current_offset;
-            return &buffer->entry[i];
-        }
-
-        current_offset += entry_chars;
+    int i = 0;
+    size_t out_offs = buffer->out_offs;
+    while(buffer->entry[out_offs].size - 1 < char_offset){
+        i += 1;
+        char_offset -= buffer->entry[out_offs].size;
+        out_offs = (out_offs + 1)%AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED;
+        if(buffer->entry[out_offs].buffptr == NULL || i == AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED)
+            return NULL;
     }
-
-    return NULL; // char_offset is not available in the buffer (not enough data written)
+    *entry_offset_byte_rtn = char_offset;
+    return &buffer->entry[(buffer->out_offs + i )%AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED];   
 }
 
 
