@@ -5,13 +5,13 @@
  *      Author: Dan Walkes
  */
 
-#ifndef AESD_CHAR_DRIVER_AESDCHAR_H_
-#define AESD_CHAR_DRIVER_AESDCHAR_H_
+ifndef AESD_CHAR_DRIVER_AESDCHAR_H_
+define AESD_CHAR_DRIVER_AESDCHAR_H_
 
-#define AESD_DEBUG 1  //Remove comment on this line to enable debug
+define AESD_DEBUG 1  //Remove comment on this line to enable debug
 
-#undef PDEBUG             /* undef it, just in case */
-#ifdef AESD_DEBUG
+undef PDEBUG             /* undef it, just in case */
+ifdef AESD_DEBUG
 #  ifdef __KERNEL__
      /* This one if debugging is on, and kernel space */
 #    define PDEBUG(fmt, args...) printk( KERN_DEBUG "aesdchar: " fmt, ## args)
@@ -28,6 +28,12 @@ struct aesd_dev
     /**
      * TODO: Add structure(s) and locks needed to complete assignment requirements
      */
+    char * buffer[10];
+    char * temp;
+    int w_pos;
+    int r_pos;
+
+    struct mutex lock;
     struct cdev cdev;     /* Char device structure      */
 };
 

@@ -12,9 +12,11 @@
  */
 
 #include <linux/module.h>
+#include <linux/moduleparam.h>
 #include <linux/init.h>
 #include <linux/printk.h>
 #include <linux/types.h>
+#include <linux/slab.h>
 #include <linux/cdev.h>
 #include <linux/fs.h> // file_operations
 #include "aesdchar.h"
@@ -25,6 +27,7 @@ MODULE_AUTHOR("Your Name Here"); /** TODO: fill in your name **/
 MODULE_LICENSE("Dual BSD/GPL");
 
 struct aesd_dev aesd_device;
+int cc;
 
 int aesd_open(struct inode *inode, struct file *filp)
 {
@@ -32,6 +35,7 @@ int aesd_open(struct inode *inode, struct file *filp)
     /**
      * TODO: handle open
      */
+    aesd_device = *container_of(inode->i_cdev, struct aesd_dev,cdev);
     return 0;
 }
 
@@ -52,6 +56,23 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
     /**
      * TODO: handle read
      */
+       if(*f_pos > 0){
+        aesd_device.r_pos =0;
+    }
+    if(cc>9)return 0;
+    if(!mutex_lock_interruptible(&aesd_device.lock)){
+       int len = strlen(aesd_device.buffer[aesd_device.r_pos]);
+       if(len  > 0){
+        printk("LENGTH %d", len);
+        retval = len;
+
+        copy_to_user(buf,aesd_device.buffer[aesd_device.r_pos],len);
+
+        cc++;
+       }
+        aesd_device.r_pos = (aesd_device.r_pos+1)%10;
+    }
+    mutex_unlock(&aesd_device.lock);
     return retval;
 }
 
@@ -63,6 +84,33 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     /**
      * TODO: handle write
      */
+        if(!mutex_lock_interruptible(&aesd_device.lock)){
+        char * tmp =  kmalloc(count, GFP_KERNEL);
+        tmp[count] ='\0';
+        copy_from_user(tmp,buf,count);
+        if(count > 0){
+            if(aesd_device.r_pos == aesd_device.w_pos && strlen(aesd_device.buffer[aesd_device.r_pos]) > 0){
+                aesd_device.r_pos = (aesd_device.r_pos+1)%10;
+            }
+
+            strcat(aesd_device.temp, tmp);
+            retval = count;
+
+            if(tmp[count -1 ] == '\n'){
+                count +=strlen(aesd_device.temp);
+                printk("COUNT: %d  ATEMP: %s    TMP:%s", count, aesd_device.temp, tmp);
+                strncpy(aesd_device.buffer[aesd_device.w_pos], aesd_device.temp,count);
+                memset(aesd_device.temp,0,BUFFSIZE);
+
+                aesd_device.w_pos = (aesd_device.w_pos+1)%10;
+                cc =0;
+            }
+
+
+        }
+        kfree(tmp);
+    }
+    mutex_unlock(&aesd_device.lock);
     return retval;
 }
 struct file_operations aesd_fops = {
@@ -106,6 +154,18 @@ int aesd_init_module(void)
      * TODO: initialize the AESD specific portion of the device
      */
 
+    aesd_device.r_pos=0;
+    aesd_device.w_pos=0;
+    int i;
+    for(i =0; i < 10; i++){
+        aesd_device.buffer[i] = kmalloc(BUFFSIZE,GFP_KERNEL);
+        memset(aesd_device.buffer[i],0,BUFFSIZE);
+    }
+    mutex_init(&aesd_device.lock);
+    aesd_device.temp = kmalloc(BUFFSIZE,GFP_KERNEL);
+    memset(aesd_device.temp,0,BUFFSIZE);
+
+    cc =0;
     result = aesd_setup_cdev(&aesd_device);
 
     if( result ) {
