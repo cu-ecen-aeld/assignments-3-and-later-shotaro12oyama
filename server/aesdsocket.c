@@ -281,8 +281,8 @@ void* timer_thread_handler(void* arg) {
         char timestamp[100];
         //strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&current_time));
         pthread_mutex_lock(&mutex);
-        FILE* file = fopen(VARTMPFILE, "a");
-        if (file == NULL) {
+        //FILE* file = fopen(VARTMPFILE, "a");
+        /*if (file == NULL) {
             perror("Failed to open file");
             pthread_mutex_unlock(&mutex);
             break;
@@ -291,7 +291,7 @@ void* timer_thread_handler(void* arg) {
 	fclose(file);
         pthread_mutex_unlock(&mutex);
 
-        sleep(10);
+        sleep(10);*/
     }
 
     pthread_exit(NULL);
@@ -333,7 +333,7 @@ int run(bool daemon) {
     }
     
     pthread_mutex_init(&mutex, NULL);
-    pthread_create(&timer_thread, NULL, timer_thread_handler, NULL);
+    //pthread_create(&timer_thread, NULL, timer_thread_handler, NULL);
 
     while (1)
     {
