@@ -25,7 +25,7 @@
 int server_socket;
 int graceful_stop = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_t timer_thread;
+//pthread_t timer_thread;
 
 
 int sock_to_peer(int sockfd, char *buf, size_t buf_size)
