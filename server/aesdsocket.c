@@ -287,7 +287,7 @@ void* timer_thread_handler(void* arg) {
             pthread_mutex_unlock(&mutex);
             break;
         }
-	fprintf(file, "timestamp:%s\n", timestamp);
+	//fprintf(file, "timestamp:%s\n", timestamp);
 	fclose(file);
         pthread_mutex_unlock(&mutex);
 
