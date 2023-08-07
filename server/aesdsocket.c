@@ -279,7 +279,7 @@ void* timer_thread_handler(void* arg) {
     while (!graceful_stop) {
         time_t current_time = time(NULL);
         char timestamp[100];
-        strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&current_time));
+        //strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", localtime(&current_time));
         pthread_mutex_lock(&mutex);
         FILE* file = fopen(VARTMPFILE, "a");
         if (file == NULL) {
