@@ -23,7 +23,7 @@
 #define ENABLE_TIMESTAMP 0
 #define ENABLE_SYS_FILE 0
 #else
-#define ENABLE_TIMESTAMP 1
+#define ENABLE_TIMESTAMP 0
 #define ENABLE_SYS_FILE 1
 #endif
 
@@ -38,11 +38,7 @@ typedef struct {
 }thread_time;
 #endif
 
-#if ENABLE_SYS_FILE
-#define FILE_PATH "/var/tmp/aesdsocketdata"
-#else
 #define FILE_PATH "/dev/aesdchar"
-#endif
 
 typedef struct {
 	pthread_mutex_t *mutex;
