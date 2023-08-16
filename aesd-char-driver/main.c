@@ -25,7 +25,7 @@
 
 int aesd_major =   0; // use dynamic major
 int aesd_minor =   0;
-
+int count = 0;
 #define BUFFSIZE 81
 MODULE_AUTHOR("Shotaro Oyama"); /** TODO: fill in your name **/
 MODULE_LICENSE("Dual BSD/GPL");
