@@ -26,7 +26,7 @@
 int aesd_major =   0; // use dynamic major
 int aesd_minor =   0;
 
-#define BUFFSIZE 25000
+#define BUFFSIZE 81
 MODULE_AUTHOR("Shotaro Oyama"); /** TODO: fill in your name **/
 MODULE_LICENSE("Dual BSD/GPL");
 
@@ -117,7 +117,7 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
         cc = 10;
 
         copy_to_user(buf, tmp, strlen(tmp));
-        printk("%s %d", tmp, strlen(tmp));
+        //printk("%s %d", tmp, strlen(tmp));
         retval = strlen(tmp);
         kfree(tmp);
     }
