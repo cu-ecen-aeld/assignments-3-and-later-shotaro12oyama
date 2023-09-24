@@ -1,13 +1,12 @@
-CC=gcc
+obj-m += pmod_hygro.o
 
-all: i2cioctl
-default: i2cioctl
+KDIR := /lib/modules/$(shell uname -r)/build
+PWD := $(shell pwd)
 
-i2cioctl: i2cioctl.o
-	$(CROSS_COMPILE)$(CC) i2cioctl.o -o i2cioctl
-
-i2cioctl.o: i2cioctl.c
-	$(CROSS_COMPILE)$(CC) -g -c i2cioctl.c -o i2cioctl.o -Wall -Werror
+all:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
 clean:
-	rm -f *.o i2cioctl *.elf *.map
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
+
+
