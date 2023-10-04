@@ -1,17 +1,26 @@
-obj-m += pmod_hygro.o
+ifeq ($(DEBUG),y)
+  DEBFLAGS = -O -g -DSCULL_DEBUG # "-O" is needed to expand inlines
+else
+  DEBFLAGS = -O2
+endif
 
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
+EXTRA_CFLAGS += $(DEBFLAGS)
+
+ifneq ($(KERNELRELEASE),)
+# call from kernel build system
+obj-m	+= pmod_hygro.o 
+else
+
+KERNELDIR ?= /lib/modules/$(shell uname -r)/build
+PWD       := $(shell pwd)
 
 all:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
-modules_install:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules_install
+endif
+
 
 clean:
-	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	rm -rf *.o *~ core .depend .*.cmd *.ko *.mod.c .tmp_versions
 
 .PHONY: modules modules_install clean
-
-
