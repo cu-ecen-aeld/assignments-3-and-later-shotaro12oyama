@@ -1,6 +1,6 @@
 #!/bin/sh
-module=i2c
-device=i2c
+module=pmod_app
+device=pmod_app
 cd `dirname $0`
 # invoke rmmod with all arguments we got
 rmmod $module || exit 1
@@ -8,3 +8,4 @@ rmmod $module || exit 1
 # Remove stale nodes
 
 rm -f /dev/${device}
+
