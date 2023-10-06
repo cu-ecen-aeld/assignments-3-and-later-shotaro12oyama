@@ -1,51 +1,70 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/i2c.h>
+#include "PmodHYGRO.h"
+
+int pmod_major =   0; // use dynamic major
+int pmod_minor =   0;
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Shotaro Oyama");
 MODULE_DESCRIPTION("PMOD HYGRO Sensor Driver");
 
-static struct i2c_client *hygro_client;
+struct pmod_dev pmod_device;
+long signed int tFine;
 
-static int hygro_probe(struct i2c_client *client, const struct i2c_device_id *id) {
+static struct i2c_client *pmod_client;
+
+static int pmod_probe(struct i2c_client *client, const struct i2c_device_id *id) {
     // センサーの初期化コードをここに記述
 
     return 0;
 }
 
-static int hygro_remove(struct i2c_client *client) {
+static int pmod_remove(struct i2c_client *client) {
     // センサーの後片付けコードをここに記述
 
     return 0;
 }
 
-static const struct i2c_device_id hygro_id[] = {
-    { "hygro", 0 },
+static const struct i2c_device_id pmod_id[] = {
+    { "pmod", 0 },
     { }
 };
-MODULE_DEVICE_TABLE(i2c, hygro_id);
+MODULE_DEVICE_TABLE(i2c, pmod_id);
 
-static struct i2c_driver hygro_driver = {
+static struct i2c_driver pmod_driver = {
     .driver = {
-        .name   = "hygro",
+        .name   = "pmod",
     },
-    .probe      = hygro_probe,
-    .remove     = hygro_remove,
-    .id_table   = hygro_id,
+    .probe      = pmod_probe,
+    .remove     = pmod_remove,
+    .id_table   = pmod_id,
 };
 
-static int __init hygro_init(void) {
+static int __init pmod_init(void) {
     printk("test build!");
-    return i2c_add_driver(&hygro_driver);
+    return i2c_add_driver(&pmod_driver);
 }
 
-static void __exit hygro_exit(void) {
-    i2c_del_driver(&hygro_driver);
-    printk("Bye bye my module\n");
+static void __exit pmod_exit(void) {
+    
+    dev_t devno;
+    printk("Finish Module\n");
+    // Remove the I2C client from the I2C subsystem
+    i2c_unregister_device(pmod_device.pmod_i2c_client);
+
+    // Delete the driver
+    i2c_del_driver(&pmod_driver);
+
+    devno = MKDEV(pmod_major, pmod_minor);
+
+    cdev_del(&pmod_device.cdev);
+
+    unregister_chrdev_region(devno, 1);
 }
 
-module_init(hygro_init);
-module_exit(hygro_exit);
+module_init(pmod_init);
+module_exit(pmod_exit);
 
 
