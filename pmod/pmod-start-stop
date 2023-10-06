@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ "$1" == "start" ]
+then
+    start-stop-daemon -S --exec /usr/bin/pmod_app -- -d
+fi
+
+if [ "$1" == "stop" ]
+then
+    start-stop-daemon -K /usr/bin/pmod_app
+fi
