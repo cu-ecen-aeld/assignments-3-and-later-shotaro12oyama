@@ -61,5 +61,7 @@ struct pmod_dev
     uint8_t calib_data[CALIB_DATA_PT_LEN];
 };
 
+static int pmod_read_temperature(struct i2c_client *client, int *temperature);
+static int pmod_read_humidity(struct i2c_client *client, int *humidity);
 
 #endif /* PMODHYGRO_H_ */
