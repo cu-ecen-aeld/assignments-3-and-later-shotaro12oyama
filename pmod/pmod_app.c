@@ -13,8 +13,6 @@
 #define HUM_REG 0x01
 #define CONFIG_REG 0x02
 
-//int pmod_major =   0; // use dynamic major
-//int pmod_minor =   0;
 
 #define I2CDEVICE 1
 
@@ -28,6 +26,17 @@ struct pmod_dev pmod_device;
 
 //static struct i2c_client *pmod_client;
 
+
+
+static const struct i2c_device_id pmod_id[] = {
+    { "pmod", 0 },
+    { }
+};
+MODULE_DEVICE_TABLE(i2c, pmod_id);
+
+
+
+
 static int pmod_probe(struct i2c_client *client, const struct i2c_device_id *id) {
     // センサーの初期化コードをここに記述
     struct i2c_adapter *adapter = client->adapter;
@@ -37,7 +46,8 @@ static int pmod_probe(struct i2c_client *client, const struct i2c_device_id *id)
     //float temperature, humidity;
     int tempRaw;
     int temperature, humidity;
-
+    
+    printk("Probe is wokring!\n");
     if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_BYTE_DATA | I2C_FUNC_SMBUS_I2C_BLOCK)) {
 	printk(KERN_ERR "%s: needed i2c functionality is not supported\n", __func__);
 	return -ENODEV;
@@ -148,11 +158,6 @@ static int pmod_remove(struct i2c_client *client) {
     return 0;
 }
 
-static const struct i2c_device_id pmod_id[] = {
-    { "pmod", 0 },
-    { }
-};
-MODULE_DEVICE_TABLE(i2c, pmod_id);
 
 static struct i2c_driver pmod_driver = {
     .driver = {
@@ -163,78 +168,16 @@ static struct i2c_driver pmod_driver = {
     .id_table   = pmod_id,
 };
 
-static int pmod_i2c_read(struct i2c_client *client, u8 *data, int length)
-{
-    struct i2c_msg msg[1];
-    int ret;
-
-    // 読み取りメッセージの設定
-    msg[0].addr = client->addr;
-    msg[0].flags = 0; // 読み取りフラグ
-    msg[0].len = length;
-    msg[0].buf = data;
-
-    // I2C 通信の実行
-    ret = i2c_transfer(client->adapter, msg, 1);
-
-    if (ret < 0) {
-        printk(KERN_ERR "I2C read failed: %d\n", ret);
-        return ret;
-    }
-
-    return 0;
-}
-
 
 static int __init pmod_init(void) {
     pr_info("test build!\n");
-
-    struct i2c_board_info info;
-    struct i2c_client *client;
-    struct i2c_adapter *adapter = client->adapter;
-    u8 data[4]; // 読み取るデータのバッファ
-
-    // I2C アダプタを取得
-    adapter = i2c_get_adapter(I2CDEVICE); 
-
-    // I2C デバイス情報を設定
-    memset(&info, 0, sizeof(struct i2c_board_info));
-    strlcpy(info.type, "PMOD HYGRO", I2C_NAME_SIZE); // デバイス名を指定
-
-    // I2C デバイスを検出または登録
-    client = i2c_new_client_device(adapter, &info);
-
-    if (!client) {
-        printk(KERN_ERR "Failed to register I2C device\n");
-        return -ENODEV;
-    }
-
-    // データの読み取り
-    if (pmod_i2c_read(client, data, sizeof(data)) < 0) {
-        // 読み取りエラーの場合の処理を追加
-        printk(KERN_ERR "Failed to Read Data\n");
-	return -EIO;
-    }
-
     return i2c_add_driver(&pmod_driver);
 }
 
 
+
 static void __exit pmod_exit(void) {
-    
-    //dev_t devno;
     pr_info("Finish Module\n");
-    // Remove the I2C client from the I2C subsystem
-    //i2c_unregister_device(pmod_device.pmod_i2c_client);
-
-    // Delete the driver
-    i2c_del_driver(&pmod_driver);
-
-    //devno = MKDEV(pmod_major, pmod_minor);
-
-    //cdev_del(&pmod_device.cdev);
-
-    //unregister_chrdev_region(devno, 1);
 }
 
 module_init(pmod_init);
