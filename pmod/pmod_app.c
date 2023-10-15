@@ -349,6 +349,7 @@ static int pmod_probe(struct i2c_client *client, const struct i2c_device_id *id)
     struct pmod_data *data;
     int ret;
 
+    printk("pmod probing..\n");
     if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_WORD_DATA |
                      I2C_FUNC_SMBUS_BYTE | I2C_FUNC_I2C))
         return -EOPNOTSUPP;
